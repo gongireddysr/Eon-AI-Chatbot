@@ -51,18 +51,18 @@ returns table (
 language sql stable
 as $$
   select
-    Finance_chat.id,
-    Finance_chat.content,
-    Finance_chat.embedding,
-    Finance_chat.chunk_index,
-    Finance_chat.start_char,
-    Finance_chat.end_char,
-    Finance_chat.char_count,
-    Finance_chat.document_name,
-    Finance_chat.created_at,
-    1 - (Finance_chat.embedding <=> query_embedding) as similarity
-  from Finance_chat
-  where 1 - (Finance_chat.embedding <=> query_embedding) > match_threshold
-  order by Finance_chat.embedding <=> query_embedding
+    finance_chat.id,
+    finance_chat.content,
+    finance_chat.embedding,
+    finance_chat.chunk_index,
+    finance_chat.start_char,
+    finance_chat.end_char,
+    finance_chat.char_count,
+    finance_chat.document_name,
+    finance_chat.created_at,
+    1 - (finance_chat.embedding <=> query_embedding) as similarity
+  from finance_chat
+  where 1 - (finance_chat.embedding <=> query_embedding) > match_threshold
+  order by finance_chat.embedding <=> query_embedding
   limit match_count;
 $$;
