@@ -6,7 +6,7 @@ export const FINANCE_TABLE = "finance_chat";
 export interface FinanceChatRow {
   id?: number;
   content: string;
-  embedding: number[];
+  embedding: number[] | string; // Can be array for TypeScript or string for PostgreSQL vector
   chunk_index: number;
   start_char: number;
   end_char: number;
@@ -32,7 +32,7 @@ export async function insertChunksToFinanceTable(
   // Transform chunks to database rows
   const rows: FinanceChatRow[] = chunks.map((chunk) => ({
     content: chunk.content,
-    embedding: chunk.embedding,
+    embedding: `[${chunk.embedding.join(',')}]`, // Format as PostgreSQL vector literal
     chunk_index: chunk.chunkIndex,
     start_char: chunk.startChar,
     end_char: chunk.endChar,
