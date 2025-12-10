@@ -1,7 +1,10 @@
 import OpenAI from "openai";
 
+// Create OpenAI client with API key from environment
+// This will only work server-side where process.env is available
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || "",
+  dangerouslyAllowBrowser: false,
 });
 
 export default openai;

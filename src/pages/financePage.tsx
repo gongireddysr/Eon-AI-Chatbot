@@ -39,7 +39,9 @@ export default function FinancePage({ onBack }: FinancePageProps) {
     setMessages((prev) => [...prev, loadingMessage]);
 
     try {
-      // Call RAG API
+      console.log(`💬 User question: ${userQuestion}`);
+
+      // Call chat API route (server-side processing)
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
@@ -49,6 +51,12 @@ export default function FinancePage({ onBack }: FinancePageProps) {
       });
 
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to get response");
+      }
+
+      console.log(`✅ Received response (confidence: ${data.confidence})`);
 
       // Remove loading message and add real response
       setMessages((prev) => {
@@ -61,15 +69,18 @@ export default function FinancePage({ onBack }: FinancePageProps) {
         return [...withoutLoading, aiMessage];
       });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      console.error("❌ Chat error:", errorMessage);
+
       // Remove loading message and show error
       setMessages((prev) => {
         const withoutLoading = prev.filter((msg) => msg.id !== loadingMessage.id);
-        const errorMessage: Message = {
+        const errorMsg: Message = {
           id: Date.now() + 2,
           text: "Sorry, I encountered an error. Please try again.",
           sender: "ai",
         };
-        return [...withoutLoading, errorMessage];
+        return [...withoutLoading, errorMsg];
       });
     }
   };

@@ -16,7 +16,7 @@ export interface FinanceChatRow {
 }
 
 /**
- * Inserts chunks with embeddings into Finance_chat table
+ * Inserts chunks with embeddings into finance_chat table using RPC helper
  * @param chunks - Array of chunks with embeddings
  * @param documentName - Name of the source document
  * @returns Number of rows inserted
@@ -29,29 +29,34 @@ export async function insertChunksToFinanceTable(
     throw new Error("No chunks to insert");
   }
 
-  // Transform chunks to database rows
-  const rows: FinanceChatRow[] = chunks.map((chunk) => ({
-    content: chunk.content,
-    embedding: `[${chunk.embedding.join(',')}]`, // Format as PostgreSQL vector literal
-    chunk_index: chunk.chunkIndex,
-    start_char: chunk.startChar,
-    end_char: chunk.endChar,
-    char_count: chunk.charCount,
-    document_name: documentName,
-  }));
+  console.log(`💾 Inserting ${chunks.length} chunks using RPC helper...`);
 
-  // Insert into database
-  const { data, error } = await supabase
-    .from(FINANCE_TABLE)
-    .insert(rows)
-    .select();
+  // Insert each chunk using the RPC helper function
+  // This ensures proper vector type casting
+  let insertedCount = 0;
 
-  if (error) {
-    throw new Error(`Failed to insert chunks: ${error.message}`);
+  for (const chunk of chunks) {
+    const embeddingString = `[${chunk.embedding.join(',')}]`;
+    
+    const { error } = await supabase.rpc('insert_finance_chunk', {
+      p_content: chunk.content,
+      p_embedding: embeddingString,
+      p_chunk_index: chunk.chunkIndex,
+      p_start_char: chunk.startChar,
+      p_end_char: chunk.endChar,
+      p_char_count: chunk.charCount,
+      p_document_name: documentName
+    });
+
+    if (error) {
+      throw new Error(`Failed to insert chunk ${chunk.chunkIndex}: ${error.message}`);
+    }
+
+    insertedCount++;
   }
 
-  console.log(`✅ Inserted ${data?.length || 0} chunks into ${FINANCE_TABLE}`);
-  return data?.length || 0;
+  console.log(`✅ Inserted ${insertedCount} chunks into ${FINANCE_TABLE}`);
+  return insertedCount;
 }
 
 /**

@@ -25,11 +25,10 @@ export async function POST(request: Request) {
     const similarChunks = await searchSimilarChunks(
       queryEmbedding,
       5, // Get top 5 most relevant chunks
-      0.5 // Lower threshold to get more results (0.5 = 50% similarity)
+      0.5 // 50% similarity threshold
     );
     console.log(`🔍 Found ${similarChunks.length} similar chunks`);
-    
-    // Debug: Log chunk details
+
     if (similarChunks.length > 0) {
       console.log('📄 Top chunk:', {
         similarity: similarChunks[0].similarity,
@@ -45,21 +44,18 @@ export async function POST(request: Request) {
     console.log(`✅ Generated RAG response (confidence: ${ragResponse.confidence})`);
 
     return NextResponse.json({
-      success: true,
       answer: ragResponse.answer,
       sources: ragResponse.sources,
       confidence: ragResponse.confidence,
-      chunksFound: similarChunks.length,
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    console.error("❌ Chat API error:", errorMessage);
+    console.error("❌ Chat error:", errorMessage);
 
     return NextResponse.json(
       {
-        success: false,
         error: errorMessage,
-        answer: "I'm sorry, I encountered an error processing your question. Please try again.",
+        answer: "Sorry, I encountered an error. Please try again.",
       },
       { status: 500 }
     );
