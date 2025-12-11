@@ -1,17 +1,19 @@
 import supabase from "@/lib/supabase";
 import { ChunkWithEmbedding } from "./embedding";
 
-export const FINANCE_TABLE = "finance_chat";
+export const DOCUMENTS_TABLE = "documents_chat";
 
-export interface FinanceChatRow {
+export interface DocumentChatRow {
   id?: number;
   content: string;
-  embedding: number[] | string; // Can be array for TypeScript or string for PostgreSQL vector
+  embedding: number[] | string;
   chunk_index: number;
   start_char: number;
   end_char: number;
   char_count: number;
   document_name: string;
+  industry?: string;
+  document_hash?: string;
   created_at?: string;
 }
 
@@ -21,37 +23,44 @@ export interface FinanceChatRow {
  * @param documentName - Name of the source document
  * @returns Number of rows inserted
  */
-export async function insertChunksToFinanceTable(
+export async function insertChunksToTable(
   chunks: ChunkWithEmbedding[],
-  documentName: string
+  documentName: string,
+  industry: string = 'Finance',
+  documentHash?: string
 ): Promise<number> {
   if (chunks.length === 0) {
     throw new Error("No chunks to insert");
   }
 
-  // Transform chunks to database rows
-  const rows: FinanceChatRow[] = chunks.map((chunk) => ({
-    content: chunk.content,
-    embedding: `[${chunk.embedding.join(',')}]`, // Format as PostgreSQL vector literal
-    chunk_index: chunk.chunkIndex,
-    start_char: chunk.startChar,
-    end_char: chunk.endChar,
-    char_count: chunk.charCount,
-    document_name: documentName,
-  }));
+  console.log(`💾 Inserting ${chunks.length} chunks for ${documentName} (${industry})...`);
 
-  // Insert into database
-  const { data, error } = await supabase
-    .from(FINANCE_TABLE)
-    .insert(rows)
-    .select();
+  let insertedCount = 0;
 
-  if (error) {
-    throw new Error(`Failed to insert chunks: ${error.message}`);
+  for (const chunk of chunks) {
+    const embeddingString = `[${chunk.embedding.join(',')}]`;
+    
+    const { error } = await supabase.rpc('insert_document_chunk', {
+      p_content: chunk.content,
+      p_embedding: embeddingString,
+      p_chunk_index: chunk.chunkIndex,
+      p_start_char: chunk.startChar,
+      p_end_char: chunk.endChar,
+      p_char_count: chunk.charCount,
+      p_document_name: documentName,
+      p_industry: industry,
+      p_document_hash: documentHash || null
+    });
+
+    if (error) {
+      throw new Error(`Failed to insert chunk ${chunk.chunkIndex}: ${error.message}`);
+    }
+
+    insertedCount++;
   }
 
-  console.log(`✅ Inserted ${data?.length || 0} chunks into ${FINANCE_TABLE}`);
-  return data?.length || 0;
+  console.log(`✅ Inserted ${insertedCount} chunks into ${DOCUMENTS_TABLE}`);
+  return insertedCount;
 }
 
 /**
@@ -61,13 +70,19 @@ export async function insertChunksToFinanceTable(
  * @returns Number of rows deleted
  */
 export async function deleteDocumentChunks(
-  documentName: string
+  documentName: string,
+  industry?: string
 ): Promise<number> {
-  const { data, error } = await supabase
-    .from(FINANCE_TABLE)
+  let query = supabase
+    .from(DOCUMENTS_TABLE)
     .delete()
-    .eq("document_name", documentName)
-    .select();
+    .eq("document_name", documentName);
+
+  if (industry) {
+    query = query.eq("industry", industry);
+  }
+
+  const { data, error } = await query.select();
 
   if (error) {
     throw new Error(`Failed to delete chunks: ${error.message}`);
@@ -87,19 +102,20 @@ export async function deleteDocumentChunks(
 export async function searchSimilarChunks(
   queryEmbedding: number[],
   limit: number = 5,
-  similarityThreshold: number = 0.7
+  similarityThreshold: number = 0.5,
+  industry?: string
 ): Promise<
   Array<
-    FinanceChatRow & {
+    DocumentChatRow & {
       similarity: number;
     }
   >
 > {
-  // Use RPC function for vector similarity search
-  const { data, error } = await supabase.rpc("match_finance_chunks", {
+  const { data, error } = await supabase.rpc("match_document_chunks", {
     query_embedding: queryEmbedding,
     match_threshold: similarityThreshold,
     match_count: limit,
+    filter_industry: industry || null,
   });
 
   if (error) {
@@ -116,9 +132,9 @@ export async function searchSimilarChunks(
  */
 export async function getDocumentChunks(
   documentName: string
-): Promise<FinanceChatRow[]> {
+): Promise<DocumentChatRow[]> {
   const { data, error } = await supabase
-    .from(FINANCE_TABLE)
+    .from(DOCUMENTS_TABLE)
     .select("*")
     .eq("document_name", documentName)
     .order("chunk_index", { ascending: true });
@@ -135,15 +151,34 @@ export async function getDocumentChunks(
  * @param documentName - Name of the document
  * @returns True if document exists
  */
-export async function documentExists(documentName: string): Promise<boolean> {
-  const { data, error } = await supabase
-    .from(FINANCE_TABLE)
+export async function documentExists(documentName: string, industry?: string): Promise<boolean> {
+  let query = supabase
+    .from(DOCUMENTS_TABLE)
     .select("id")
-    .eq("document_name", documentName)
-    .limit(1);
+    .eq("document_name", documentName);
+
+  if (industry) {
+    query = query.eq("industry", industry);
+  }
+
+  const { data, error } = await query.limit(1);
 
   if (error) {
     throw new Error(`Failed to check document existence: ${error.message}`);
+  }
+
+  return (data?.length || 0) > 0;
+}
+
+export async function documentExistsByHash(documentHash: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from(DOCUMENTS_TABLE)
+    .select("id")
+    .eq("document_hash", documentHash)
+    .limit(1);
+
+  if (error) {
+    throw new Error(`Failed to check document hash: ${error.message}`);
   }
 
   return (data?.length || 0) > 0;
@@ -153,45 +188,55 @@ export async function documentExists(documentName: string): Promise<boolean> {
  * Gets statistics about stored documents
  * @returns Object with document statistics
  */
-export async function getFinanceTableStats(): Promise<{
+export async function getDocumentsTableStats(): Promise<{
   totalChunks: number;
   uniqueDocuments: number;
-  documents: Array<{ name: string; chunkCount: number }>;
+  documents: Array<{ name: string; industry: string; chunkCount: number }>;
+  industries: Record<string, number>;
 }> {
-  // Get total chunks
   const { count: totalChunks, error: countError } = await supabase
-    .from(FINANCE_TABLE)
+    .from(DOCUMENTS_TABLE)
     .select("*", { count: "exact", head: true });
 
   if (countError) {
     throw new Error(`Failed to get stats: ${countError.message}`);
   }
 
-  // Get unique documents with chunk counts
   const { data: docs, error: docsError } = await supabase
-    .from(FINANCE_TABLE)
-    .select("document_name")
+    .from(DOCUMENTS_TABLE)
+    .select("document_name, industry")
     .order("document_name");
 
   if (docsError) {
     throw new Error(`Failed to get documents: ${docsError.message}`);
   }
 
-  // Count chunks per document
-  const docCounts = new Map<string, number>();
+  const docCounts = new Map<string, { industry: string; count: number }>();
+  const industryCounts: Record<string, number> = {};
+
   docs?.forEach((doc) => {
-    const count = docCounts.get(doc.document_name) || 0;
-    docCounts.set(doc.document_name, count + 1);
+    const key = doc.document_name;
+    const existing = docCounts.get(key);
+    if (existing) {
+      existing.count++;
+    } else {
+      docCounts.set(key, { industry: doc.industry || 'Unknown', count: 1 });
+    }
+    
+    const industry = doc.industry || 'Unknown';
+    industryCounts[industry] = (industryCounts[industry] || 0) + 1;
   });
 
-  const documents = Array.from(docCounts.entries()).map(([name, chunkCount]) => ({
+  const documents = Array.from(docCounts.entries()).map(([name, data]) => ({
     name,
-    chunkCount,
+    industry: data.industry,
+    chunkCount: data.count,
   }));
 
   return {
     totalChunks: totalChunks || 0,
     uniqueDocuments: documents.length,
     documents,
+    industries: industryCounts,
   };
 }

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-interface FinancePageProps {
+interface HealthcarePageProps {
   onBack?: () => void;
 }
 
@@ -12,7 +12,7 @@ interface Message {
   sender: "user" | "ai";
 }
 
-export default function FinancePage({ onBack }: FinancePageProps) {
+export default function HealthcarePage({ onBack }: HealthcarePageProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
 
@@ -39,7 +39,7 @@ export default function FinancePage({ onBack }: FinancePageProps) {
     setMessages((prev) => [...prev, loadingMessage]);
 
     try {
-      // Call RAG API with Finance industry filter
+      // Call RAG API with Healthcare industry filter
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
@@ -47,7 +47,7 @@ export default function FinancePage({ onBack }: FinancePageProps) {
         },
         body: JSON.stringify({ 
           message: userQuestion,
-          industry: "Finance"
+          industry: "Healthcare"
         }),
       });
 
@@ -98,7 +98,7 @@ export default function FinancePage({ onBack }: FinancePageProps) {
       <div className="flex-1 overflow-y-auto p-6 pt-20 pb-24">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <p className="text-gray-500 text-lg">Start a conversation...</p>
+            <p className="text-gray-500 text-lg">Start a conversation about Healthcare...</p>
           </div>
         ) : (
           <div className="max-w-4xl mx-auto space-y-4">
@@ -114,7 +114,7 @@ export default function FinancePage({ onBack }: FinancePageProps) {
                     message.sender === "user" ? "max-w-[70%]" : "max-w-[85%]"
                   } px-5 py-4 rounded-lg ${
                     message.sender === "user"
-                      ? "bg-blue-600 text-white"
+                      ? "bg-red-600 text-white"
                       : "bg-gray-800 text-white"
                   }`}
                 >
@@ -136,12 +136,12 @@ export default function FinancePage({ onBack }: FinancePageProps) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Type your message..."
-            className="flex-1 px-4 py-3 bg-gray-900 text-white rounded-lg border border-gray-700 focus:outline-none focus:border-blue-500"
+            placeholder="Ask about Healthcare..."
+            className="flex-1 px-4 py-3 bg-gray-900 text-white rounded-lg border border-gray-700 focus:outline-none focus:border-red-500"
           />
           <button
             onClick={handleSend}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
           >
             Send
           </button>
