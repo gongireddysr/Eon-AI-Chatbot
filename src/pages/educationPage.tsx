@@ -1,15 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import SpaceBackground from "@/components/SpaceBackground";
+import {
+  TopicsSidebar,
+  FloatingInput,
+  ChatMessages,
+  BackButton,
+  Message,
+} from "@/components/ChatComponents";
 
 interface EducationPageProps {
   onBack?: () => void;
-}
-
-interface Message {
-  id: number;
-  text: string;
-  sender: "user" | "ai";
 }
 
 export default function EducationPage({ onBack }: EducationPageProps) {
@@ -77,75 +79,54 @@ export default function EducationPage({ onBack }: EducationPageProps) {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
+
+  const educationTopics = [
+    "Student Loans",
+    "Scholarships",
+    "Course Enrollment",
+    "Admission Process",
+    "Tuition Fees",
+    "Academic Programs",
+    "Student Portal",
+    "Exam Schedules",
+    "Certificates",
+    "Transcripts",
+    "Financial Aid",
+    "Campus Facilities",
+    "Online Learning",
+    "Student Services",
+    "Document Verification",
+  ];
+
+  const ACCENT_COLOR = "#39FF14";
 
   return (
-    <div className="min-h-screen bg-black flex flex-col">
-      {/* Back Button */}
-      <button
-        onClick={onBack}
-        className="absolute top-6 right-6 px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-gray-200 transition-colors z-10"
-      >
-        ← Back
-      </button>
+    <div className="min-h-screen relative flex overflow-hidden">
+      <SpaceBackground />
+      
+      <TopicsSidebar 
+        topics={educationTopics} 
+        title="Education Topics" 
+        accentColor={ACCENT_COLOR}
+      />
 
-      {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-6 pt-20 pb-24">
-        {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-gray-500 text-lg">Start a conversation about Education...</p>
-          </div>
-        ) : (
-          <div className="max-w-4xl mx-auto space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${
-                  message.sender === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div
-                  className={`${
-                    message.sender === "user" ? "max-w-[70%]" : "max-w-[85%]"
-                  } px-5 py-4 rounded-lg ${
-                    message.sender === "user"
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-800 text-white"
-                  }`}
-                >
-                  <div className="whitespace-pre-line leading-7 text-[15px]">
-                    {message.text}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Input Box */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800 p-4">
-        <div className="max-w-4xl mx-auto flex gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Ask about Education..."
-            className="flex-1 px-4 py-3 bg-gray-900 text-white rounded-lg border border-gray-700 focus:outline-none focus:border-green-500"
-          />
-          <button
-            onClick={handleSend}
-            className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
-          >
-            Send
-          </button>
-        </div>
+      <div className="flex-1 flex flex-col relative">
+        <BackButton onBack={onBack} />
+        
+        <ChatMessages 
+          messages={messages} 
+          accentColor={ACCENT_COLOR}
+          emptyStateText="Start a conversation about Education..."
+        />
+        
+        <FloatingInput
+          input={input}
+          setInput={setInput}
+          onSend={handleSend}
+          placeholder="Ask about Education..."
+          accentColor={ACCENT_COLOR}
+          hasMessages={messages.length > 0}
+        />
       </div>
     </div>
   );
