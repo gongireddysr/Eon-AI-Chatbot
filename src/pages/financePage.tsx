@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SpaceBackground from "@/components/SpaceBackground";
 import {
   TopicsSidebar,
@@ -10,6 +10,8 @@ import {
   Message,
 } from "@/components/ChatComponents";
 
+const STORAGE_KEY = "finance_chat_history";
+
 interface FinancePageProps {
   onBack?: () => void;
 }
@@ -17,6 +19,31 @@ interface FinancePageProps {
 export default function FinancePage({ onBack }: FinancePageProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+
+  // Load messages from sessionStorage on mount
+  useEffect(() => {
+    const saved = sessionStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        setMessages(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse saved messages");
+      }
+    }
+  }, []);
+
+  // Save messages to sessionStorage when they change
+  useEffect(() => {
+    if (messages.length > 0) {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    }
+  }, [messages]);
+
+  // Clear storage when navigating away
+  const handleBack = () => {
+    sessionStorage.removeItem(STORAGE_KEY);
+    onBack?.();
+  };
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -41,7 +68,15 @@ export default function FinancePage({ onBack }: FinancePageProps) {
     setMessages((prev) => [...prev, loadingMessage]);
 
     try {
-      // Call RAG API with Finance industry filter
+      // Build conversation history from existing messages (excluding loading messages)
+      const history = messages
+        .filter((msg) => msg.text !== "Thinking...")
+        .map((msg) => ({
+          role: msg.sender === "user" ? "user" : "assistant",
+          content: msg.text,
+        }));
+
+      // Call RAG API with Finance industry filter and conversation history
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
@@ -49,7 +84,8 @@ export default function FinancePage({ onBack }: FinancePageProps) {
         },
         body: JSON.stringify({ 
           message: userQuestion,
-          industry: "Finance"
+          industry: "Finance",
+          history: history,
         }),
       });
 
@@ -81,21 +117,26 @@ export default function FinancePage({ onBack }: FinancePageProps) {
 
 
   const financeTopics = [
-    "Personal Loans",
-    "Home Loans",
-    "Credit Cards",
-    "Savings Accounts",
-    "Fixed Deposits",
-    "Investment Options",
-    "Insurance Services",
-    "Account Opening",
-    "Online Banking",
-    "Mobile Banking",
-    "Fund Transfers",
-    "Interest Rates",
-    "Loan Eligibility",
-    "Document Requirements",
-    "Processing Fees",
+    "Account Statements",
+    "Savings Account T&Cs",
+    "Checking Account Features",
+    "ATM/Debit Card Agreement",
+    "Wire Transfer & ACH Policy",
+    "Personal Loan Agreement",
+    "Credit Card Agreement",
+    "Mortgage Checklist",
+    "Auto Loan Disclosure",
+    "Credit Report Guide",
+    "Online Banking Security",
+    "Fraud Prevention",
+    "Mobile Banking Features",
+    "Privacy & Data Policy",
+    "Digital Wallets Terms",
+    "FDIC/NCUA Insurance",
+    "Fee Schedule",
+    "Complaint Resolution",
+    "AML Policy",
+    "Power of Attorney Docs",
   ];
 
   const ACCENT_COLOR = "#00D9FF";
@@ -110,8 +151,8 @@ export default function FinancePage({ onBack }: FinancePageProps) {
         accentColor={ACCENT_COLOR}
       />
 
-      <div className="flex-1 flex flex-col relative">
-        <BackButton onBack={onBack} />
+      <div className="flex-1 flex flex-col relative ml-64">
+        <BackButton onBack={handleBack} />
         
         <ChatMessages 
           messages={messages} 

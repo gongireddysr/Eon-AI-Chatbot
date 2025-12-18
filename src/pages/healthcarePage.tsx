@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SpaceBackground from "@/components/SpaceBackground";
 import {
   TopicsSidebar,
@@ -10,6 +10,8 @@ import {
   Message,
 } from "@/components/ChatComponents";
 
+const STORAGE_KEY = "healthcare_chat_history";
+
 interface HealthcarePageProps {
   onBack?: () => void;
 }
@@ -17,6 +19,31 @@ interface HealthcarePageProps {
 export default function HealthcarePage({ onBack }: HealthcarePageProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+
+  // Load messages from sessionStorage on mount
+  useEffect(() => {
+    const saved = sessionStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        setMessages(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse saved messages");
+      }
+    }
+  }, []);
+
+  // Save messages to sessionStorage when they change
+  useEffect(() => {
+    if (messages.length > 0) {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    }
+  }, [messages]);
+
+  // Clear storage when navigating away
+  const handleBack = () => {
+    sessionStorage.removeItem(STORAGE_KEY);
+    onBack?.();
+  };
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -41,7 +68,15 @@ export default function HealthcarePage({ onBack }: HealthcarePageProps) {
     setMessages((prev) => [...prev, loadingMessage]);
 
     try {
-      // Call RAG API with Healthcare industry filter
+      // Build conversation history from existing messages (excluding loading messages)
+      const history = messages
+        .filter((msg) => msg.text !== "Thinking...")
+        .map((msg) => ({
+          role: msg.sender === "user" ? "user" : "assistant",
+          content: msg.text,
+        }));
+
+      // Call RAG API with Healthcare industry filter and conversation history
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
@@ -49,7 +84,8 @@ export default function HealthcarePage({ onBack }: HealthcarePageProps) {
         },
         body: JSON.stringify({ 
           message: userQuestion,
-          industry: "Healthcare"
+          industry: "Healthcare",
+          history: history,
         }),
       });
 
@@ -81,21 +117,26 @@ export default function HealthcarePage({ onBack }: HealthcarePageProps) {
 
 
   const healthcareTopics = [
-    "Appointments",
-    "Medical Records",
-    "Health Insurance",
-    "Patient Portal",
-    "Prescriptions",
-    "Lab Results",
-    "Specialist Referrals",
-    "Emergency Services",
-    "Vaccination Records",
-    "Billing & Payments",
-    "Telemedicine",
-    "Hospital Facilities",
-    "Medical Procedures",
-    "Patient Care",
-    "Health Programs",
+    "Patient Registration and Initial Intake Workflow",
+    "Electronic Health Record (EHR) Data Entry Process",
+    "Medication Ordering and Administration Procedure",
+    "Diagnostic Test Request and Result Interpretation Flow",
+    "Emergency Room Triage and Prioritization Protocol",
+    "Patient Consent Collection and Verification",
+    "Appointment Scheduling and Rescheduling Workflow",
+    "Inpatient Admission and Bed Allocation Process",
+    "Clinical Documentation Standards for Providers",
+    "Handling Critical Lab Values and Alert Notifications",
+    "Discharge Planning and Summary Preparation",
+    "Patient Transfer Between Departments Workflow",
+    "Medical Device Usage and Maintenance Procedure",
+    "Insurance Claim Submission and Pre-Authorization",
+    "Infection Control and Isolation Room Protocol",
+    "Telemedicine Visit Setup and Documentation",
+    "Prescription Refill and Renewal Workflow",
+    "Code Blue Activation and Response Procedure",
+    "Patient Follow-Up and Care Continuity Tracking",
+    "Incident Reporting and Risk Management Process",
   ];
 
   const ACCENT_COLOR = "#FF10F0";
@@ -110,8 +151,8 @@ export default function HealthcarePage({ onBack }: HealthcarePageProps) {
         accentColor={ACCENT_COLOR}
       />
 
-      <div className="flex-1 flex flex-col relative">
-        <BackButton onBack={onBack} />
+      <div className="flex-1 flex flex-col relative ml-64">
+        <BackButton onBack={handleBack} />
         
         <ChatMessages 
           messages={messages} 
