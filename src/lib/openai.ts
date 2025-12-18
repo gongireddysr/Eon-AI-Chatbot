@@ -7,11 +7,16 @@ import { AMBIGUITY_PROMPT } from "./prompts/ambiguity";
 import { SESSION_PROMPT } from "./prompts/session";
 import { FORMATTING_PROMPT } from "./prompts/formatting";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+let openaiInstance: OpenAI | null = null;
 
-export default openai;
+export function getOpenAIClient(): OpenAI {
+  if (!openaiInstance) {
+    openaiInstance = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return openaiInstance;
+}
 
 // System prompt for Multi-Industry RAG chatbot (Finance, Education, Healthcare)
 export const FINANCE_SYSTEM_PROMPT = [
@@ -82,7 +87,7 @@ export async function generateRAGResponse(
   });
 
   // Call OpenAI
-  const completion = await openai.chat.completions.create({
+  const completion = await getOpenAIClient().chat.completions.create({
     model: "gpt-4o-mini",
     messages: messages,
     temperature: 0.3, // Balanced for clear, concise explanations

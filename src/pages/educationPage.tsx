@@ -26,7 +26,7 @@ export default function EducationPage({ onBack }: EducationPageProps) {
     if (saved) {
       try {
         setMessages(JSON.parse(saved));
-      } catch (_e) {
+      } catch {
         console.error("Failed to parse saved messages");
       }
     }
@@ -101,7 +101,7 @@ export default function EducationPage({ onBack }: EducationPageProps) {
         };
         return [...withoutLoading, aiMessage];
       });
-    } catch (_error) {
+    } catch {
       // Remove loading message and show error
       setMessages((prev) => {
         const withoutLoading = prev.filter((msg) => msg.id !== loadingMessage.id);

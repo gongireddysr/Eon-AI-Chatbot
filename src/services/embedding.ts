@@ -1,4 +1,4 @@
-import openai from "@/lib/openai";
+import { getOpenAIClient } from "@/lib/openai";
 import { TextChunk } from "./chunker";
 
 // OpenAI embedding model configuration
@@ -16,7 +16,7 @@ export interface ChunkWithEmbedding extends TextChunk {
  */
 export async function generateEmbedding(text: string): Promise<number[]> {
   try {
-    const response = await openai.embeddings.create({
+    const response = await getOpenAIClient().embeddings.create({
       model: EMBEDDING_MODEL,
       input: text,
     });
@@ -77,7 +77,7 @@ export async function generateEmbeddingsForChunks(
  */
 async function generateEmbeddingsBatch(texts: string[]): Promise<number[][]> {
   try {
-    const response = await openai.embeddings.create({
+    const response = await getOpenAIClient().embeddings.create({
       model: EMBEDDING_MODEL,
       input: texts,
     });

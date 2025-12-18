@@ -67,6 +67,7 @@ Respond with ONLY ONE WORD: Finance, Education, or Healthcare`;
  * @param industry - Industry name
  * @returns Table name
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function getTableNameForIndustry(_industry: Industry): string {
   return "documents_chat";
 }
