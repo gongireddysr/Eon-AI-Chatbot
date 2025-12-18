@@ -117,20 +117,13 @@ export function FloatingInput({
 
   return (
     <div
-      className={`transition-all duration-700 ease-in-out ${
-        hasMessages
-          ? "fixed bottom-0 right-0 left-64 border-t p-4"
-          : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-      }`}
+      className="fixed left-64 right-0 p-4 transition-all duration-500 ease-in-out"
       style={{
-        width: hasMessages ? "auto" : "calc(100% - 256px - 4rem)",
-        maxWidth: hasMessages ? "none" : "800px",
-        background: "rgba(255, 255, 255, 0.05)",
-        backdropFilter: "blur(15px)",
-        borderColor: "rgba(255, 255, 255, 0.1)",
+        bottom: hasMessages ? "0" : "50%",
+        transform: hasMessages ? "translateY(0)" : "translateY(50%)",
       }}
     >
-      <div className={`${hasMessages ? "max-w-4xl mx-auto" : ""} flex gap-2`}>
+      <div className="max-w-4xl mx-auto flex gap-2">
         <input
           type="text"
           value={input}
@@ -191,7 +184,7 @@ export function ChatMessages({ messages, accentColor, emptyStateText }: ChatMess
     <div className="flex-1 overflow-y-auto p-6 pt-20 pb-32 custom-scrollbar">
       {messages.length === 0 ? (
         <div className="flex items-center justify-center h-full">
-          <p className="text-gray-400 text-lg">
+          <p className="text-gray-400 text-lg" style={{ marginBottom: "120px" }}>
             {emptyStateText}
           </p>
         </div>
