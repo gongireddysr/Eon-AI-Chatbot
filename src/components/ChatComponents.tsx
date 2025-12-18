@@ -14,18 +14,18 @@ interface TopicsSidebarProps {
   accentColor: string;
 }
 
-export function TopicsSidebar({ topics, title, accentColor }: TopicsSidebarProps) {
+export function TopicsSidebar({ topics, title }: TopicsSidebarProps) {
   return (
-    <div className="w-64 border-r overflow-hidden" style={{
+    <div className="w-64 border-r overflow-hidden h-screen fixed left-0 top-0" style={{
       background: "rgba(255, 255, 255, 0.05)",
       backdropFilter: "blur(10px)",
       borderColor: "rgba(255, 255, 255, 0.1)",
     }}>
-      <div className="p-6">
+      <div className="p-6 h-full flex flex-col">
         <h2 className="text-xl font-bold text-white mb-4">
           {title}
         </h2>
-        <div className="overflow-y-auto topics-scrollbar" style={{ height: "calc(3 * 56px)" }}>
+        <div className="overflow-y-auto topics-scrollbar flex-1">
           {topics.map((topic, index) => (
             <div
               key={index}
@@ -56,7 +56,7 @@ interface MessageBubbleProps {
   accentColor: string;
 }
 
-export function MessageBubble({ message, accentColor }: MessageBubbleProps) {
+export function MessageBubble({ message }: MessageBubbleProps) {
   return (
     <div
       className={`flex ${
@@ -98,7 +98,6 @@ export function FloatingInput({
   setInput,
   onSend,
   placeholder,
-  accentColor,
   hasMessages,
 }: FloatingInputProps) {
   const [isAnimating, setIsAnimating] = useState(false);
@@ -107,7 +106,7 @@ export function FloatingInput({
     if (hasMessages && !isAnimating) {
       setIsAnimating(true);
     }
-  }, [hasMessages]);
+  }, [hasMessages, isAnimating]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {

@@ -1,4 +1,4 @@
-import supabase from "@/lib/supabase";
+import { getSupabaseClient } from "@/lib/supabase";
 
 /**
  * Gets list of all PDF files in a Supabase Storage bucket
@@ -10,7 +10,7 @@ export async function getAllPdfFiles(bucketName: string, folderPath: string = ''
     console.log(`🔍 Scanning ${bucketName} bucket${folderPath ? `/${folderPath}` : ''} for PDF files...`);
     
     // List files in the specified path (or root if empty)
-    const { data: files, error } = await supabase.storage
+    const { data: files, error } = await getSupabaseClient().storage
       .from(bucketName)
       .list(folderPath, {
         limit: 100,
@@ -73,7 +73,7 @@ export async function calculateDocumentHash(
   fileName: string
 ): Promise<string> {
   try {
-    const { data, error } = await supabase.storage
+    const { data, error } = await getSupabaseClient().storage
       .from(bucketName)
       .download(fileName);
     

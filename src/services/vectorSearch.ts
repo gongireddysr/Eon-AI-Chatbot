@@ -1,4 +1,4 @@
-import supabase from "@/lib/supabase";
+import { getSupabaseClient } from "@/lib/supabase";
 import { ChunkWithEmbedding } from "./embedding";
 
 export const DOCUMENTS_TABLE = "documents_chat";
@@ -40,7 +40,7 @@ export async function insertChunksToTable(
   for (const chunk of chunks) {
     const embeddingString = `[${chunk.embedding.join(',')}]`;
     
-    const { error } = await supabase.rpc('insert_document_chunk', {
+    const { error } = await getSupabaseClient().rpc('insert_document_chunk', {
       p_content: chunk.content,
       p_embedding: embeddingString,
       p_chunk_index: chunk.chunkIndex,
@@ -73,7 +73,7 @@ export async function deleteDocumentChunks(
   documentName: string,
   industry?: string
 ): Promise<number> {
-  let query = supabase
+  let query = getSupabaseClient()
     .from(DOCUMENTS_TABLE)
     .delete()
     .eq("document_name", documentName);
@@ -111,7 +111,7 @@ export async function searchSimilarChunks(
     }
   >
 > {
-  const { data, error } = await supabase.rpc("match_document_chunks", {
+  const { data, error } = await getSupabaseClient().rpc("match_document_chunks", {
     query_embedding: queryEmbedding,
     match_threshold: similarityThreshold,
     match_count: limit,
@@ -133,7 +133,7 @@ export async function searchSimilarChunks(
 export async function getDocumentChunks(
   documentName: string
 ): Promise<DocumentChatRow[]> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabaseClient()
     .from(DOCUMENTS_TABLE)
     .select("*")
     .eq("document_name", documentName)
@@ -152,7 +152,7 @@ export async function getDocumentChunks(
  * @returns True if document exists
  */
 export async function documentExists(documentName: string, industry?: string): Promise<boolean> {
-  let query = supabase
+  let query = getSupabaseClient()
     .from(DOCUMENTS_TABLE)
     .select("id")
     .eq("document_name", documentName);
@@ -171,7 +171,7 @@ export async function documentExists(documentName: string, industry?: string): P
 }
 
 export async function documentExistsByHash(documentHash: string): Promise<boolean> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabaseClient()
     .from(DOCUMENTS_TABLE)
     .select("id")
     .eq("document_hash", documentHash)
@@ -194,7 +194,7 @@ export async function getDocumentsTableStats(): Promise<{
   documents: Array<{ name: string; industry: string; chunkCount: number }>;
   industries: Record<string, number>;
 }> {
-  const { count: totalChunks, error: countError } = await supabase
+  const { count: totalChunks, error: countError } = await getSupabaseClient()
     .from(DOCUMENTS_TABLE)
     .select("*", { count: "exact", head: true });
 
@@ -202,7 +202,7 @@ export async function getDocumentsTableStats(): Promise<{
     throw new Error(`Failed to get stats: ${countError.message}`);
   }
 
-  const { data: docs, error: docsError } = await supabase
+  const { data: docs, error: docsError } = await getSupabaseClient()
     .from(DOCUMENTS_TABLE)
     .select("document_name, industry")
     .order("document_name");

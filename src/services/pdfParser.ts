@@ -1,4 +1,4 @@
-import supabase from "@/lib/supabase";
+import { getSupabaseClient } from "@/lib/supabase";
 
 // Supabase Storage configuration
 export const BUCKET_NAME = "Documents";
@@ -14,7 +14,7 @@ export async function downloadPdfFromSupabase(
   bucketName: string,
   filePath: string
 ): Promise<Buffer> {
-  const { data, error } = await supabase.storage
+  const { data, error } = await getSupabaseClient().storage
     .from(bucketName)
     .download(filePath);
 

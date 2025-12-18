@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SpaceBackground from "@/components/SpaceBackground";
 import {
   TopicsSidebar,
@@ -10,6 +10,8 @@ import {
   Message,
 } from "@/components/ChatComponents";
 
+const STORAGE_KEY = "education_chat_history";
+
 interface EducationPageProps {
   onBack?: () => void;
 }
@@ -17,6 +19,31 @@ interface EducationPageProps {
 export default function EducationPage({ onBack }: EducationPageProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+
+  // Load messages from sessionStorage on mount
+  useEffect(() => {
+    const saved = sessionStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        setMessages(JSON.parse(saved));
+      } catch {
+        console.error("Failed to parse saved messages");
+      }
+    }
+  }, []);
+
+  // Save messages to sessionStorage when they change
+  useEffect(() => {
+    if (messages.length > 0) {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    }
+  }, [messages]);
+
+  // Clear storage when navigating away
+  const handleBack = () => {
+    sessionStorage.removeItem(STORAGE_KEY);
+    onBack?.();
+  };
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -41,7 +68,15 @@ export default function EducationPage({ onBack }: EducationPageProps) {
     setMessages((prev) => [...prev, loadingMessage]);
 
     try {
-      // Call RAG API with Education industry filter
+      // Build conversation history from existing messages (excluding loading messages)
+      const history = messages
+        .filter((msg) => msg.text !== "Thinking...")
+        .map((msg) => ({
+          role: msg.sender === "user" ? "user" : "assistant",
+          content: msg.text,
+        }));
+
+      // Call RAG API with Education industry filter and conversation history
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
@@ -49,7 +84,8 @@ export default function EducationPage({ onBack }: EducationPageProps) {
         },
         body: JSON.stringify({ 
           message: userQuestion,
-          industry: "Education"
+          industry: "Education",
+          history: history,
         }),
       });
 
@@ -65,7 +101,7 @@ export default function EducationPage({ onBack }: EducationPageProps) {
         };
         return [...withoutLoading, aiMessage];
       });
-    } catch (error) {
+    } catch {
       // Remove loading message and show error
       setMessages((prev) => {
         const withoutLoading = prev.filter((msg) => msg.id !== loadingMessage.id);
@@ -81,21 +117,26 @@ export default function EducationPage({ onBack }: EducationPageProps) {
 
 
   const educationTopics = [
-    "Student Loans",
-    "Scholarships",
-    "Course Enrollment",
-    "Admission Process",
-    "Tuition Fees",
-    "Academic Programs",
-    "Student Portal",
-    "Exam Schedules",
-    "Certificates",
-    "Transcripts",
-    "Financial Aid",
-    "Campus Facilities",
-    "Online Learning",
-    "Student Services",
-    "Document Verification",
+    "Student Enrollment & Registration",
+    "Course Creation & Curriculum",
+    "Class Scheduling & Timetable",
+    "Attendance Tracking",
+    "Grade Submission & Evaluation",
+    "Student Profile Updates",
+    "Teacher Onboarding & Access",
+    "Classroom Resource Booking",
+    "Assignment Submission Flow",
+    "Online Exams & Proctoring",
+    "Feedback & Course Evaluation",
+    "Fee Payments & Invoices",
+    "Parent-Teacher Communication",
+    "Student Progress Reports",
+    "Login & Account Issues",
+    "External Tool Integration (LTI/SSO)",
+    "Data Backup & Restoration",
+    "User Roles & Permissions",
+    "Dropouts & Withdrawals",
+    "Notifications & Alerts",
   ];
 
   const ACCENT_COLOR = "#39FF14";
@@ -110,8 +151,8 @@ export default function EducationPage({ onBack }: EducationPageProps) {
         accentColor={ACCENT_COLOR}
       />
 
-      <div className="flex-1 flex flex-col relative">
-        <BackButton onBack={onBack} />
+      <div className="flex-1 flex flex-col relative ml-64">
+        <BackButton onBack={handleBack} />
         
         <ChatMessages 
           messages={messages} 
