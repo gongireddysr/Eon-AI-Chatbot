@@ -1,22 +1,18 @@
-import type { NextApiRequest, NextApiResponse } from "next";
+import { NextRequest, NextResponse } from "next/server";
 import { generateEmbedding } from "@/services/embedding";
 import { searchSimilarChunks } from "@/services/vectorSearch";
 import { generateRAGResponse } from "@/lib/openai";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
+export async function POST(req: NextRequest) {
   try {
-    const { message, industry } = req.body;
+    const { message, industry, history } = await req.json();
 
     if (!message || typeof message !== "string") {
-      return res.status(400).json({ error: "Message is required" });
+      return NextResponse.json({ error: "Message is required" }, { status: 400 });
     }
+
+    // Parse conversation history (array of {role, content})
+    const conversationHistory = Array.isArray(history) ? history : [];
 
     // Default to Finance if no industry specified
     const selectedIndustry = industry || "Finance";
@@ -48,11 +44,11 @@ export default async function handler(
       console.log('⚠️ No chunks found - check if data exists in documents_chat table');
     }
 
-    // Step 3: Generate RAG response using OpenAI
-    const ragResponse = await generateRAGResponse(message, similarChunks);
+    // Step 3: Generate RAG response using OpenAI with conversation history
+    const ragResponse = await generateRAGResponse(message, similarChunks, conversationHistory);
     console.log(`✅ Generated RAG response (confidence: ${ragResponse.confidence})`);
 
-    return res.status(200).json({
+    return NextResponse.json({
       success: true,
       answer: ragResponse.answer,
       sources: ragResponse.sources,
@@ -63,10 +59,13 @@ export default async function handler(
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("❌ Chat API error:", errorMessage);
 
-    return res.status(500).json({
-      success: false,
-      error: errorMessage,
-      answer: "I'm sorry, I encountered an error processing your question. Please try again.",
-    });
+    return NextResponse.json(
+      {
+        success: false,
+        error: errorMessage,
+        answer: "I'm sorry, I encountered an error processing your question. Please try again.",
+      },
+      { status: 500 }
+    );
   }
 }
