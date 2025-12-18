@@ -12,6 +12,7 @@ export default function LandingPage() {
   const [showHealthcare, setShowHealthcare] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [processMessage, setProcessMessage] = useState("");
+  const [showProcessBtn, setShowProcessBtn] = useState(false);
 
   const handleProcessDocument = async () => {
     setProcessing(true);
@@ -70,14 +71,34 @@ export default function LandingPage() {
     <div className="min-h-screen relative flex items-center justify-center overflow-hidden">
       <SpaceBackground />
       
-      {/* Process Document Button - Top Right */}
-      <button
-        onClick={handleProcessDocument}
-        disabled={processing}
-        className="absolute top-6 right-6 btn-secondary text-sm z-20 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {processing ? "Processing..." : "Process Documents"}
-      </button>
+      {/* Floating + Button at Bottom Right */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+        {/* Process Document Button - appears when + is clicked */}
+        <button
+          onClick={handleProcessDocument}
+          disabled={processing}
+          className={`btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 ${
+            showProcessBtn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+          }`}
+        >
+          {processing ? "Processing..." : "Process Documents"}
+        </button>
+        
+        {/* + Toggle Button */}
+        <button
+          onClick={() => setShowProcessBtn(!showProcessBtn)}
+          className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-white/20 transition-all duration-300 hover:scale-105"
+        >
+          <svg 
+            className={`w-6 h-6 transition-transform duration-300 ${showProcessBtn ? "rotate-45" : ""}`} 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+      </div>
 
       {/* Main Content */}
       <div className="flex flex-col items-center gap-12 md:gap-16 z-10 px-4 w-full max-w-6xl">
