@@ -151,7 +151,7 @@ export default function HealthcarePage({ onBack }: HealthcarePageProps) {
         accentColor={ACCENT_COLOR}
       />
 
-      <div className="flex-1 flex flex-col relative ml-64">
+      <div className="flex-1 flex flex-col relative">
         <BackButton onBack={handleBack} />
         
         <ChatMessages 
