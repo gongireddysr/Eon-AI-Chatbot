@@ -26,7 +26,7 @@ export default function FinancePage({ onBack }: FinancePageProps) {
     if (saved) {
       try {
         setMessages(JSON.parse(saved));
-      } catch (e) {
+      } catch (_e) {
         console.error("Failed to parse saved messages");
       }
     }
@@ -101,7 +101,7 @@ export default function FinancePage({ onBack }: FinancePageProps) {
         };
         return [...withoutLoading, aiMessage];
       });
-    } catch (error) {
+    } catch (_error) {
       // Remove loading message and show error
       setMessages((prev) => {
         const withoutLoading = prev.filter((msg) => msg.id !== loadingMessage.id);

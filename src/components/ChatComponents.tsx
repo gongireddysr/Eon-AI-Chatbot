@@ -14,7 +14,7 @@ interface TopicsSidebarProps {
   accentColor: string;
 }
 
-export function TopicsSidebar({ topics, title, accentColor }: TopicsSidebarProps) {
+export function TopicsSidebar({ topics, title, accentColor: _accentColor }: TopicsSidebarProps) {
   return (
     <div className="w-64 border-r overflow-hidden h-screen fixed left-0 top-0" style={{
       background: "rgba(255, 255, 255, 0.05)",
@@ -56,7 +56,7 @@ interface MessageBubbleProps {
   accentColor: string;
 }
 
-export function MessageBubble({ message, accentColor }: MessageBubbleProps) {
+export function MessageBubble({ message, accentColor: _accentColor }: MessageBubbleProps) {
   return (
     <div
       className={`flex ${
@@ -98,7 +98,7 @@ export function FloatingInput({
   setInput,
   onSend,
   placeholder,
-  accentColor,
+  accentColor: _accentColor,
   hasMessages,
 }: FloatingInputProps) {
   const [isAnimating, setIsAnimating] = useState(false);
@@ -107,7 +107,7 @@ export function FloatingInput({
     if (hasMessages && !isAnimating) {
       setIsAnimating(true);
     }
-  }, [hasMessages]);
+  }, [hasMessages, isAnimating]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {

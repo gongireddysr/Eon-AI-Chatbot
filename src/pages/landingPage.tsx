@@ -33,7 +33,7 @@ export default function LandingPage() {
       if (result.success) {
         const industryInfo = result.industries 
           ? Object.entries(result.industries)
-              .map(([ind, count]: [string, any]) => `${ind} (${count})`)
+              .map(([ind, count]) => `${ind} (${count})`)
               .join(", ")
           : "";
         setProcessMessage(

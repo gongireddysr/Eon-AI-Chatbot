@@ -67,6 +67,6 @@ Respond with ONLY ONE WORD: Finance, Education, or Healthcare`;
  * @param industry - Industry name
  * @returns Table name
  */
-export function getTableNameForIndustry(industry: Industry): string {
+export function getTableNameForIndustry(_industry: Industry): string {
   return "documents_chat";
 }
