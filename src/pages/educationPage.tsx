@@ -151,7 +151,7 @@ export default function EducationPage({ onBack }: EducationPageProps) {
         accentColor={ACCENT_COLOR}
       />
 
-      <div className="flex-1 flex flex-col relative ml-64">
+      <div className="flex-1 flex flex-col relative">
         <BackButton onBack={handleBack} />
         
         <ChatMessages 

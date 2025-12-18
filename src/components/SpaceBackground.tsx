@@ -12,63 +12,126 @@ export default function SpaceBackground() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
 
-    const stars: { x: number; y: number; radius: number; opacity: number; twinkleSpeed: number }[] = [];
-    const starCount = 200;
+    // Neural network nodes
+    const nodes: { x: number; y: number; vx: number; vy: number }[] = [];
+    const nodeCount = 60;
+    const connectionDistance = 180;
 
-    for (let i = 0; i < starCount; i++) {
-      stars.push({
+    for (let i = 0; i < nodeCount; i++) {
+      nodes.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        radius: Math.random() * 1.5,
-        opacity: Math.random(),
-        twinkleSpeed: Math.random() * 0.02 + 0.005,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
       });
     }
 
     let animationFrameId: number;
 
     const animate = () => {
-      ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      stars.forEach((star) => {
-        star.opacity += star.twinkleSpeed;
-        if (star.opacity > 1 || star.opacity < 0) {
-          star.twinkleSpeed = -star.twinkleSpeed;
-        }
+      // Update and draw nodes
+      nodes.forEach((node) => {
+        node.x += node.vx;
+        node.y += node.vy;
 
+        // Bounce off edges
+        if (node.x < 0 || node.x > canvas.width) node.vx *= -1;
+        if (node.y < 0 || node.y > canvas.height) node.vy *= -1;
+
+        // Draw node
         ctx.beginPath();
-        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${Math.abs(star.opacity)})`;
+        ctx.arc(node.x, node.y, 2, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(0, 210, 255, 0.5)";
         ctx.fill();
       });
+
+      // Draw connections
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dx = nodes[i].x - nodes[j].x;
+          const dy = nodes[i].y - nodes[j].y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance < connectionDistance) {
+            const opacity = (1 - distance / connectionDistance) * 0.15;
+            ctx.beginPath();
+            ctx.moveTo(nodes[i].x, nodes[i].y);
+            ctx.lineTo(nodes[j].x, nodes[j].y);
+            ctx.strokeStyle = `rgba(0, 210, 255, ${opacity})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+        }
+      }
 
       animationFrameId = requestAnimationFrame(animate);
     };
 
     animate();
-
-    const handleResize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-
-    window.addEventListener("resize", handleResize);
+    window.addEventListener("resize", resize);
 
     return () => {
       cancelAnimationFrame(animationFrameId);
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("resize", resize);
     };
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="fixed top-0 left-0 w-full h-full -z-10"
-      style={{ background: "radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%)" }}
-    />
+    <div className="fixed inset-0 -z-10 overflow-hidden">
+      {/* Base dark navy background */}
+      <div className="absolute inset-0 bg-[#020617]" />
+      
+      {/* Animated mesh gradient orbs */}
+      <div className="absolute inset-0">
+        {/* Teal orb - top left */}
+        <div 
+          className="absolute w-[600px] h-[600px] md:w-[800px] md:h-[800px] rounded-full opacity-20 blur-[120px] animate-pulse"
+          style={{
+            background: 'radial-gradient(circle, #14b8a6 0%, transparent 70%)',
+            top: '-20%',
+            left: '-10%',
+            animationDuration: '8s',
+          }}
+        />
+        
+        {/* Purple orb - right side */}
+        <div 
+          className="absolute w-[400px] h-[400px] md:w-[600px] md:h-[600px] rounded-full opacity-15 blur-[100px] animate-pulse"
+          style={{
+            background: 'radial-gradient(circle, #a855f7 0%, transparent 70%)',
+            top: '30%',
+            right: '-5%',
+            animationDuration: '10s',
+            animationDelay: '2s',
+          }}
+        />
+        
+        {/* Electric blue orb - bottom */}
+        <div 
+          className="absolute w-[500px] h-[500px] md:w-[700px] md:h-[700px] rounded-full opacity-10 blur-[100px] animate-pulse"
+          style={{
+            background: 'radial-gradient(circle, #00D2FF 0%, transparent 70%)',
+            bottom: '-15%',
+            left: '30%',
+            animationDuration: '12s',
+            animationDelay: '4s',
+          }}
+        />
+      </div>
+      
+      {/* Neural network canvas overlay */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 pointer-events-none"
+      />
+    </div>
   );
 }
