@@ -88,10 +88,10 @@ export function TopicsSidebar({ topics, title }: TopicsSidebarProps) {
         {topics.map((topic, index) => (
           <div
             key={index}
-            className={`flex items-center gap-3 py-2.5 text-gray-200 rounded-xl text-sm transition-all duration-300 cursor-pointer hover:text-white hover:bg-white/10 ${isExpanded ? "px-3" : "px-2 justify-center"}`}
+            className="flex items-center gap-3 py-2.5 px-3 text-gray-200 rounded-xl text-sm transition-all duration-300 cursor-pointer hover:text-white hover:bg-white/10"
           >
             <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 flex-shrink-0" />
-            {isExpanded && <span className="leading-relaxed">{topic}</span>}
+            <span className={`leading-relaxed whitespace-nowrap overflow-hidden transition-all duration-300 ${isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"}`}>{topic}</span>
           </div>
         ))}
       </div>
