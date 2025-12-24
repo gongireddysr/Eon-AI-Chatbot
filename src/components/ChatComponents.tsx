@@ -49,11 +49,11 @@ export function TopicsSidebar({ topics, title }: TopicsSidebarProps) {
             >
               <div className="w-12 h-1 bg-white/30 rounded-full mx-auto mb-4" />
               <h2 className="text-lg font-semibold text-white mb-4">{title}</h2>
-              <div className="overflow-y-auto max-h-[40vh] space-y-2 topics-scrollbar">
+              <div className="overflow-auto max-h-[40vh] space-y-2 topics-scrollbar">
                 {topics.map((topic, index) => (
                   <div
                     key={index}
-                    className="px-4 py-3 text-gray-300 rounded-xl text-sm transition-all duration-300 cursor-pointer hover:text-white hover:bg-white/10"
+                    className="px-4 py-3 text-gray-300 rounded-xl text-sm transition-all duration-300 cursor-pointer hover:text-white hover:bg-white/10 whitespace-nowrap"
                   >
                     {topic}
                   </div>
@@ -84,14 +84,14 @@ export function TopicsSidebar({ topics, title }: TopicsSidebarProps) {
       </div>
       
       {/* Topics */}
-      <div className="flex-1 overflow-y-auto topics-scrollbar w-full space-y-1">
+      <div className="flex-1 overflow-auto topics-scrollbar w-full space-y-1">
         {topics.map((topic, index) => (
           <div
             key={index}
             className="flex items-center gap-3 py-2.5 px-3 text-gray-200 rounded-xl text-sm transition-all duration-300 cursor-pointer hover:text-white hover:bg-white/10"
           >
             <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 flex-shrink-0" />
-            <span className={`leading-relaxed whitespace-nowrap overflow-hidden transition-all duration-300 ${isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"}`}>{topic}</span>
+            <span className={`leading-relaxed whitespace-nowrap transition-all duration-300 ${isExpanded ? "opacity-100" : "opacity-0 w-0"}`}>{topic}</span>
           </div>
         ))}
       </div>
