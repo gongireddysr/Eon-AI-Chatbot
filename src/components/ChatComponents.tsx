@@ -25,35 +25,51 @@ export function TopicsSidebar({ topics, title }: TopicsSidebarProps) {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Mobile: Bottom toggle bar
+  // Mobile: Top left toggle with dropdown
   if (isMobile) {
     return (
       <>
-        {/* Mobile Toggle Button */}
+        {/* Mobile Toggle Button - Top Left with animated hamburger/X */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="fixed bottom-4 left-4 z-50 sidebar-pill px-4 py-3 flex items-center gap-2 text-white text-sm"
+          className="fixed top-6 left-6 z-50 sidebar-pill px-4 py-3 flex items-center gap-2 text-white text-sm"
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
+          <div className="w-5 h-5 relative flex flex-col justify-center items-center">
+            {/* Top line */}
+            <span 
+              className={`absolute h-0.5 w-5 bg-current transform transition-all duration-300 ease-in-out ${
+                isExpanded ? "rotate-45 translate-y-0" : "-translate-y-1.5"
+              }`}
+            />
+            {/* Middle line */}
+            <span 
+              className={`absolute h-0.5 w-5 bg-current transition-all duration-300 ease-in-out ${
+                isExpanded ? "opacity-0 scale-0" : "opacity-100 scale-100"
+              }`}
+            />
+            {/* Bottom line */}
+            <span 
+              className={`absolute h-0.5 w-5 bg-current transform transition-all duration-300 ease-in-out ${
+                isExpanded ? "-rotate-45 translate-y-0" : "translate-y-1.5"
+              }`}
+            />
+          </div>
           <span>Topics</span>
         </button>
 
-        {/* Mobile Expanded Panel */}
+        {/* Mobile Dropdown Panel - drops from top */}
         {isExpanded && (
           <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={() => setIsExpanded(false)}>
             <div 
-              className="absolute bottom-0 left-0 right-0 max-h-[60vh] sidebar-pill rounded-t-3xl rounded-b-none p-6"
+              className="absolute top-20 left-4 right-4 max-h-[60vh] sidebar-pill rounded-2xl p-5 animate-dropdown"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="w-12 h-1 bg-white/30 rounded-full mx-auto mb-4" />
-              <h2 className="text-lg font-semibold text-white mb-4">{title}</h2>
-              <div className="overflow-auto max-h-[40vh] space-y-2 topics-scrollbar">
+              <h2 className="text-lg font-semibold text-white mb-4 px-2">{title}</h2>
+              <div className="overflow-auto max-h-[50vh] space-y-1 topics-scrollbar">
                 {topics.map((topic, index) => (
                   <div
                     key={index}
-                    className="px-4 py-3 text-gray-300 rounded-xl text-sm transition-all duration-300 cursor-pointer hover:text-white hover:bg-white/10 whitespace-nowrap"
+                    className="px-4 py-3 text-gray-300 rounded-xl text-sm transition-all duration-300 cursor-pointer hover:text-white hover:bg-white/10"
                   >
                     {topic}
                   </div>
