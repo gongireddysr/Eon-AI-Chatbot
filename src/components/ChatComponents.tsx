@@ -250,7 +250,7 @@ export function BackButton({ onBack }: { onBack?: () => void }) {
   return (
     <button
       onClick={onBack}
-      className="absolute top-6 right-6 btn-secondary flex items-center gap-2 text-sm z-10"
+      className="fixed top-6 right-6 btn-secondary flex items-center gap-2 text-sm z-50"
     >
       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
