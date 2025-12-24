@@ -282,11 +282,23 @@ export async function generateRAGResponse(
     model: "gpt-4o-mini",
     messages: messages,
     temperature: 0.3,
-    max_tokens: 250,
+    max_tokens: 400,
     top_p: 0.9,
   });
 
-  const answer = completion.choices[0]?.message?.content || "I couldn't generate a response.";
+  const rawAnswer = completion.choices[0]?.message?.content || "I couldn't generate a response.";
+  
+  // Strip markdown formatting from the response
+  const answer = rawAnswer
+    .replace(/\*\*(.*?)\*\*/g, '$1')  // Remove **bold**
+    .replace(/__(.*?)__/g, '$1')      // Remove __bold__
+    .replace(/\*(.*?)\*/g, '$1')      // Remove *italic*
+    .replace(/_(.*?)_/g, '$1')        // Remove _italic_
+    .replace(/^#{1,6}\s*/gm, '')      // Remove # headers
+    .replace(/^[-*]\s+/gm, '')        // Remove - or * bullet points
+    .replace(/`([^`]+)`/g, '$1')      // Remove `code`
+    .replace(/```[\s\S]*?```/g, '')   // Remove code blocks
+    .trim();
 
   // Extract sources from context chunks
   const sources = contextChunks.map(
