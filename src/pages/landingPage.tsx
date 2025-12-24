@@ -1,18 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import FinancePage from "./financePage";
 import EducationPage from "./educationPage";
 import HealthcarePage from "./healthcarePage";
 import SpaceBackground from "@/components/SpaceBackground";
 
+const CURRENT_PAGE_KEY = "current_chat_page";
+
 export default function LandingPage() {
+  const [isInitialized, setIsInitialized] = useState(false);
   const [showFinance, setShowFinance] = useState(false);
   const [showEducation, setShowEducation] = useState(false);
   const [showHealthcare, setShowHealthcare] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [processMessage, setProcessMessage] = useState("");
   const [showProcessBtn, setShowProcessBtn] = useState(false);
+
+  // Restore current page on mount - set initialized after checking
+  useEffect(() => {
+    const savedPage = sessionStorage.getItem(CURRENT_PAGE_KEY);
+    if (savedPage === "finance") setShowFinance(true);
+    else if (savedPage === "education") setShowEducation(true);
+    else if (savedPage === "healthcare") setShowHealthcare(true);
+    setIsInitialized(true);
+  }, []);
+
+  // Show nothing until we've checked sessionStorage
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen bg-black">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900" />
+      </div>
+    );
+  }
 
   const handleProcessDocument = async () => {
     setProcessing(true);
@@ -55,16 +76,36 @@ export default function LandingPage() {
     }
   };
 
+  // Navigation handlers that save/clear current page
+  const goToFinance = () => {
+    sessionStorage.setItem(CURRENT_PAGE_KEY, "finance");
+    setShowFinance(true);
+  };
+  const goToEducation = () => {
+    sessionStorage.setItem(CURRENT_PAGE_KEY, "education");
+    setShowEducation(true);
+  };
+  const goToHealthcare = () => {
+    sessionStorage.setItem(CURRENT_PAGE_KEY, "healthcare");
+    setShowHealthcare(true);
+  };
+  const goBack = () => {
+    sessionStorage.removeItem(CURRENT_PAGE_KEY);
+    setShowFinance(false);
+    setShowEducation(false);
+    setShowHealthcare(false);
+  };
+
   if (showFinance) {
-    return <FinancePage onBack={() => setShowFinance(false)} />;
+    return <FinancePage onBack={goBack} />;
   }
 
   if (showEducation) {
-    return <EducationPage onBack={() => setShowEducation(false)} />;
+    return <EducationPage onBack={goBack} />;
   }
 
   if (showHealthcare) {
-    return <HealthcarePage onBack={() => setShowHealthcare(false)} />;
+    return <HealthcarePage onBack={goBack} />;
   }
 
   return (
@@ -122,7 +163,7 @@ export default function LandingPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 w-full">
           {/* Finance Box - Cobalt Blue */}
           <div
-            onClick={() => setShowFinance(true)}
+            onClick={goToFinance}
             className="glass-card neon-card-cobalt cursor-pointer p-6 md:p-8 group"
           >
             <div className="flex items-center gap-3 mb-4">
@@ -142,7 +183,7 @@ export default function LandingPage() {
 
           {/* Education Box - Royal Blue */}
           <div
-            onClick={() => setShowEducation(true)}
+            onClick={goToEducation}
             className="glass-card neon-card-royal cursor-pointer p-6 md:p-8 group"
           >
             <div className="flex items-center gap-3 mb-4">
@@ -163,7 +204,7 @@ export default function LandingPage() {
 
           {/* Healthcare Box - Emerald Green */}
           <div
-            onClick={() => setShowHealthcare(true)}
+            onClick={goToHealthcare}
             className="glass-card neon-card-emerald cursor-pointer p-6 md:p-8 group sm:col-span-2 md:col-span-1"
           >
             <div className="flex items-center gap-3 mb-4">
