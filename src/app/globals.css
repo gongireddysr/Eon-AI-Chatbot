@@ -248,14 +248,37 @@ body {
   background: rgba(255, 255, 255, 0.3);
 }
 
-/* Topics Sidebar Scrollbar - hidden but scrollable */
+/* Topics Sidebar Scrollbar - visible only on hover */
 .topics-scrollbar {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: transparent transparent; /* Firefox - hidden by default */
+}
+
+.topics-scrollbar:hover {
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent; /* Firefox - show on hover */
 }
 
 .topics-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  width: 6px;
+  height: 6px;
+}
+
+.topics-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.topics-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent; /* Hidden by default */
+  border-radius: 3px;
+  transition: background 0.3s ease;
+}
+
+.topics-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3); /* Show on hover */
+}
+
+.topics-scrollbar:hover::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
 }
 
 /* Smooth transitions */
