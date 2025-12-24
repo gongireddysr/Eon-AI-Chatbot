@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     const similarChunks = await searchSimilarChunks(
       queryEmbedding,
       5, // Get top 5 most relevant chunks
-      0.5, // Lower threshold to get more results (0.5 = 50% similarity)
+      0.7, // Higher threshold to ensure relevance (0.7 = 70% similarity)
       selectedIndustry // Filter by specified industry
     );
     console.log(`🔍 Found ${similarChunks.length} similar chunks from ${selectedIndustry} industry`);
@@ -44,8 +44,8 @@ export async function POST(req: NextRequest) {
       console.log('⚠️ No chunks found - check if data exists in documents_chat table');
     }
 
-    // Step 3: Generate RAG response using OpenAI with conversation history
-    const ragResponse = await generateRAGResponse(message, similarChunks, conversationHistory);
+    // Step 3: Generate RAG response using OpenAI with conversation history and industry context
+    const ragResponse = await generateRAGResponse(message, similarChunks, conversationHistory, selectedIndustry);
     console.log(`✅ Generated RAG response (confidence: ${ragResponse.confidence})`);
 
     return NextResponse.json({
