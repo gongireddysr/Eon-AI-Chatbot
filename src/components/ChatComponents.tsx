@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { MessageFeedbackButtons } from "./FeedbackComponents";
 
 export interface Message {
   id: number;
@@ -127,10 +128,14 @@ export function TopicsSidebar({ topics, title }: TopicsSidebarProps) {
 interface MessageBubbleProps {
   message: Message;
   accentColor: string;
+  sessionId?: string;
+  industry?: string;
+  userQuestion?: string;
 }
 
-export function MessageBubble({ message }: MessageBubbleProps) {
+export function MessageBubble({ message, sessionId, industry, userQuestion }: MessageBubbleProps) {
   const isUser = message.sender === "user";
+  const showFeedback = !isUser && message.text !== "Thinking..." && sessionId && industry;
   
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
@@ -152,6 +157,15 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         <div className="whitespace-pre-line leading-7 text-[15px] text-white/90">
           {message.text}
         </div>
+        {showFeedback && (
+          <MessageFeedbackButtons
+            messageId={message.id}
+            sessionId={sessionId}
+            userQuestion={userQuestion || ''}
+            aiResponse={message.text}
+            industry={industry}
+          />
+        )}
       </div>
     </div>
   );
@@ -226,14 +240,26 @@ interface ChatMessagesProps {
   messages: Message[];
   accentColor: string;
   emptyStateText: string;
+  sessionId?: string;
+  industry?: string;
 }
 
-export function ChatMessages({ messages, accentColor, emptyStateText }: ChatMessagesProps) {
+export function ChatMessages({ messages, accentColor, emptyStateText, sessionId, industry }: ChatMessagesProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Find the user question that preceded each AI message
+  const getUserQuestionForAI = (index: number): string => {
+    for (let i = index - 1; i >= 0; i--) {
+      if (messages[i].sender === 'user') {
+        return messages[i].text;
+      }
+    }
+    return '';
+  };
 
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-6 pt-16 md:pt-20 pb-32 md:pb-40 custom-scrollbar md:ml-16">
@@ -250,8 +276,15 @@ export function ChatMessages({ messages, accentColor, emptyStateText }: ChatMess
         </div>
       ) : (
         <div className="max-w-3xl mx-auto space-y-4">
-          {messages.map((message) => (
-            <MessageBubble key={message.id} message={message} accentColor={accentColor} />
+          {messages.map((message, index) => (
+            <MessageBubble 
+              key={message.id} 
+              message={message} 
+              accentColor={accentColor}
+              sessionId={sessionId}
+              industry={industry}
+              userQuestion={message.sender === 'ai' ? getUserQuestionForAI(index) : undefined}
+            />
           ))}
           <div ref={messagesEndRef} />
         </div>
