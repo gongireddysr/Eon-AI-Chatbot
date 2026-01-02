@@ -112,8 +112,8 @@ export default function LandingPage() {
     <div className="min-h-screen relative flex items-center justify-center overflow-hidden">
       <SpaceBackground />
       
-      {/* Floating + Button at Bottom Right - HIDDEN */}
-      <div className="hidden fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+      {/* Floating + Button at Bottom Right */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
         {/* Process Document Button - appears when + is clicked */}
         <button
           onClick={handleProcessDocument}

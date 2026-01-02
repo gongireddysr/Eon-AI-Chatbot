@@ -9,6 +9,7 @@ import {
   BackButton,
   Message,
 } from "@/components/ChatComponents";
+import { SessionRatingModal } from "@/components/FeedbackComponents";
 
 const STORAGE_KEY = "finance_chat_history";
 
@@ -19,6 +20,8 @@ interface FinancePageProps {
 export default function FinancePage({ onBack }: FinancePageProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [sessionId] = useState(() => `finance-${Date.now()}`);
+  const [showRating, setShowRating] = useState(false);
 
   // Load messages from sessionStorage on mount
   useEffect(() => {
@@ -39,9 +42,20 @@ export default function FinancePage({ onBack }: FinancePageProps) {
     }
   }, [messages]);
 
-  // Clear storage when navigating away
-  const handleBack = () => {
+  // Handle back button - show rating modal if there are messages
+  const handleBackClick = () => {
+    if (messages.length > 0) {
+      setShowRating(true);
+    } else {
+      sessionStorage.removeItem(STORAGE_KEY);
+      onBack?.();
+    }
+  };
+
+  // Complete navigation after rating
+  const completeBack = () => {
     sessionStorage.removeItem(STORAGE_KEY);
+    setShowRating(false);
     onBack?.();
   };
 
@@ -152,13 +166,24 @@ export default function FinancePage({ onBack }: FinancePageProps) {
       />
 
       <div className="flex-1 flex flex-col relative">
-        <BackButton onBack={handleBack} />
+        <BackButton onBack={handleBackClick} />
         
         <ChatMessages 
           messages={messages} 
           accentColor={ACCENT_COLOR}
           emptyStateText="Start a conversation about Finance..."
+          sessionId={sessionId}
+          industry="Finance"
         />
+        
+        {showRating && (
+          <SessionRatingModal
+            sessionId={sessionId}
+            industry="Finance"
+            onComplete={completeBack}
+            onSkip={completeBack}
+          />
+        )}
         
         <FloatingInput
           input={input}

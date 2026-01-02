@@ -1,22 +1,16 @@
-import type { NextApiRequest, NextApiResponse } from "next";
+import { NextRequest, NextResponse } from "next/server";
 import { processDocumentWithIndustry } from "@/services/documentPipeline";
 import { getAllPdfFiles, calculateDocumentHash } from "@/services/bucketScanner";
 import { classifyDocument } from "@/services/industryClassifier";
 import { getPdfContent } from "@/services/pdfParser";
 
 const BUCKET_NAME = "Documents";
-const FOLDER_PATH = ""; // Files are at root of bucket (empty string)
+const FOLDER_PATH = "";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
+export async function POST(request: NextRequest) {
   try {
-    const { overwrite } = req.body;
+    const body = await request.json();
+    const { overwrite } = body;
 
     console.log("🚀 Starting multi-document processing...");
     console.log(`   Bucket: ${BUCKET_NAME}`);
@@ -36,7 +30,7 @@ export default async function handler(
         3. Storage permissions allow listing
         4. Environment variables are set correctly`);
       
-      return res.status(200).json({
+      return NextResponse.json({
         success: true,
         message: `No PDF files found in "${BUCKET_NAME}" bucket. Please check bucket name and contents.`,
         processedCount: 0,
@@ -119,7 +113,7 @@ export default async function handler(
       .map(([industry, count]) => `${industry} (${count})`)
       .join(", ");
 
-    return res.status(200).json({
+    return NextResponse.json({
       success: true,
       message: `Processed ${successCount} of ${pdfFiles.length} documents${industrySummary ? `: ${industrySummary}` : ""}`,
       processedCount: successCount,
@@ -134,10 +128,10 @@ export default async function handler(
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("❌ Process document API error:", errorMessage);
 
-    return res.status(500).json({
+    return NextResponse.json({
       success: false,
       error: errorMessage,
       message: "Failed to process documents",
-    });
+    }, { status: 500 });
   }
 }
