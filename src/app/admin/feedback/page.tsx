@@ -39,14 +39,72 @@ export default function AdminFeedbackPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'messages' | 'sessions'>('messages');
   const [filterIndustry, setFilterIndustry] = useState<string>('all');
+  
+  // Authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  // Check if already authenticated on mount
+  useEffect(() => {
+    const authToken = sessionStorage.getItem('admin_auth');
+    if (authToken === 'authenticated') {
+      setIsAuthenticated(true);
+    }
+    setCheckingAuth(false);
+  }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    
+    try {
+      const response = await fetch('/api/feedback', {
+        headers: {
+          'x-admin-password': password,
+        },
+      });
+      
+      if (response.ok) {
+        sessionStorage.setItem('admin_auth', 'authenticated');
+        sessionStorage.setItem('admin_password', password);
+        setIsAuthenticated(true);
+      } else {
+        setAuthError('Invalid password');
+      }
+    } catch {
+      setAuthError('Authentication failed');
+    }
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem('admin_auth');
+    sessionStorage.removeItem('admin_password');
+    setIsAuthenticated(false);
+    setPassword('');
+  };
 
   useEffect(() => {
-    fetchFeedback();
-  }, []);
+    if (isAuthenticated) {
+      fetchFeedback();
+    }
+  }, [isAuthenticated]);
 
   const fetchFeedback = async () => {
     try {
-      const response = await fetch('/api/feedback');
+      const savedPassword = sessionStorage.getItem('admin_password');
+      const response = await fetch('/api/feedback', {
+        headers: {
+          'x-admin-password': savedPassword || '',
+        },
+      });
+      
+      if (!response.ok) {
+        handleLogout();
+        return;
+      }
+      
       const data = await response.json();
       setFeedbackData(data);
     } catch (error) {
@@ -83,6 +141,51 @@ export default function AdminFeedbackPage() {
 
   const industries = ['all', 'Healthcare', 'Finance', 'Education'];
 
+  // Show loading while checking auth
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  // Show login form if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center">
+        <div className="bg-white/5 border border-white/10 rounded-xl p-8 w-full max-w-md">
+          <h1 className="text-2xl font-bold text-white mb-6 text-center">Admin Access</h1>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-gray-400 text-sm mb-2">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500"
+                placeholder="Enter admin password"
+                autoFocus
+              />
+            </div>
+            {authError && (
+              <p className="text-red-400 text-sm">{authError}</p>
+            )}
+            <button
+              type="submit"
+              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-3 rounded-lg transition-colors"
+            >
+              Login
+            </button>
+          </form>
+          <Link href="/" className="block text-center text-gray-500 hover:text-gray-400 mt-4 text-sm">
+            ← Back to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#020617] flex items-center justify-center">
@@ -110,15 +213,23 @@ export default function AdminFeedbackPage() {
                 Feedback Dashboard
               </h1>
             </div>
-            <button
-              onClick={fetchFeedback}
-              className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-colors flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Refresh
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={fetchFeedback}
+                className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-colors flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-lg transition-colors text-sm"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </header>
