@@ -9,9 +9,17 @@ interface MessageFeedbackEntry {
   timestamp: string;
 }
 
-// GET - Retrieve all feedback from Supabase
-export async function GET() {
+// GET - Retrieve all feedback from Supabase (requires admin password)
+export async function GET(request: NextRequest) {
   try {
+    // Check admin password
+    const adminPassword = request.headers.get('x-admin-password');
+    const expectedPassword = process.env.ADMIN_SECRET;
+    
+    if (!expectedPassword || adminPassword !== expectedPassword) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
     const supabase = getSupabaseClient();
     
     const { data: sessions, error } = await supabase
